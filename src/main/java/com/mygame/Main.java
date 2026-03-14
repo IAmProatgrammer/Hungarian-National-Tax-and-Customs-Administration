@@ -1,18 +1,31 @@
 package com.mygame;
 
-import com.jme3.app.SimpleApplication;
-import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
-import com.jme3.renderer.RenderManager;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.shape.Box;
 
+import com.jme3.app.SimpleApplication;
+import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.light.DirectionalLight;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
+import com.jme3.light.SpotLight;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.CameraNode;
+import com.jme3.scene.Node;
 /**
  * This is the Main Class of your Game. You should only do initialization here.
  * Move your Logic into AppStates or Controls
  * @author normenhansen
  */
+
 public class Main extends SimpleApplication {
+
+    private BulletAppState bulletAppState;
+    
+    private GameCamera gameCamera;
+
+    private boolean cursorHidden = false;
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -21,24 +34,53 @@ public class Main extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
-        Box b = new Box(1, 1, 1);
-        Geometry geom = new Geometry("Box", b);
 
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", ColorRGBA.Blue);
-        geom.setMaterial(mat);
+        // Disable default fly cam & HUD
+        flyCam.setEnabled(false);
+        setDisplayStatView(false);
+        setDisplayFps(false);
 
-        rootNode.attachChild(geom);
+        // Physics
+        bulletAppState = new BulletAppState();
+        stateManager.attach(bulletAppState);
+
+        // Initialize scene
+        
+        
+
+        // Optional: Add physics for entire scene mesh (not required if Scene adds physics per object)
+        RigidBodyControl sceneControl = new RigidBodyControl(
+                CollisionShapeFactory.createMeshShape(rootNode),
+                0f
+        );
+        rootNode.addControl(sceneControl);
+        bulletAppState.getPhysicsSpace().add(sceneControl);
+
+        // Initialize player camera
+        gameCamera = new GameCamera(cam, inputManager, bulletAppState, rootNode);
+        gameCamera.init(new Vector3f(6, 0, 6));
+
+        // Lighting
+
+        
+
     }
 
     @Override
     public void simpleUpdate(float tpf) {
-        //TODO: add update code
-    }
 
-    @Override
-    public void simpleRender(RenderManager rm) {
-        //TODO: add render code
+        // Hide cursor once
+        if (!cursorHidden && inputManager != null) {
+            inputManager.setCursorVisible(false);
+            inputManager.setMouseCursor(null);
+            cursorHidden = true;
+        }
+
+        // Update camera
+        if (gameCamera != null) {
+            gameCamera.update(tpf);
+            
+
+        }
     }
 }
-
